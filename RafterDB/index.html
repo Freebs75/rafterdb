@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RafterDB — Every banner. Every rafter.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; background: #f8f8f6; color: #1a1a1a; min-height: 100vh; }
+    .header { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+    .logo span { color: #1a3a6b; }
+    .tagline { font-size: 13px; color: #888; }
+    .nav-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 18px; background: #1a3a6b; color: #fff; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; }
+    .hero { text-align: center; padding: 4rem 2rem 3rem; }
+    .hero h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 700; line-height: 1; margin-bottom: 1rem; }
+    .hero p { font-size: 18px; color: #666; margin-bottom: 2rem; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 12px 28px; background: #1a3a6b; color: #fff; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; }
+    .btn-secondary { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 12px 28px; background: transparent; color: #1a3a6b; border: 1.5px solid #1a3a6b; border-radius: 8px; cursor: pointer; text-decoration: none; }
+    .stats-bar { background: #1a3a6b; color: #fff; padding: 1.5rem 2rem; display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 700; }
+    .stat-label { font-size: 13px; opacity: 0.75; margin-top: 2px; }
+    .section { padding: 3rem 2rem; max-width: 1000px; margin: 0 auto; }
+    .section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 1.25rem; letter-spacing: 0.3px; }
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .team-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; text-decoration: none; color: inherit; display: block; }
+    .team-card:hover { border-color: #1a3a6b; box-shadow: 0 2px 8px rgba(26,58,107,0.08); }
+    .team-league { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+    .league-nhl { color: #0c447c; }
+    .league-nba { color: #e65100; }
+    .team-name { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+    .team-arena { font-size: 12px; color: #888; margin-bottom: 10px; }
+    .team-count { font-size: 12px; color: #aaa; border-top: 1px solid #f0f0f0; padding-top: 8px; }
+    .team-count strong { color: #1a3a6b; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; }
+    .submit-banner { background: #1a3a6b; color: #fff; border-radius: 12px; padding: 2rem; text-align: center; margin: 2rem auto; max-width: 1000px; }
+    .submit-banner h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+    .submit-banner p { font-size: 14px; opacity: 0.8; margin-bottom: 1.25rem; }
+    .btn-white { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 10px 24px; background: #fff; color: #1a3a6b; border: none; border-radius: 8px; cursor: pointer; }
+    .footer { text-align: center; padding: 2rem; font-size: 13px; color: #aaa; border-top: 1px solid #e5e5e5; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <div class="logo">Rafter<span>DB</span></div>
+      <div class="tagline">The database for arena & stadium banners</div>
+    </div>
+    <a href="#" class="nav-btn">Submit a banner</a>
+  </div>
+
+  <div class="hero">
+    <h1>Every banner.<br>Every rafter.</h1>
+    <p>The definitive database for arena and stadium banners across every league.</p>
+    <div class="hero-btns">
+      <a href="#teams" class="btn-primary">Browse teams</a>
+      <a href="#" class="btn-secondary">Submit a banner</a>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-val" id="stat-banners">—</div><div class="stat-label">Banners documented</div></div>
+    <div class="stat"><div class="stat-val" id="stat-teams">—</div><div class="stat-label">Teams</div></div>
+    <div class="stat"><div class="stat-val" id="stat-arenas">—</div><div class="stat-label">Arenas</div></div>
+  </div>
+
+  <div class="section" id="teams">
+    <div class="section-title">Browse by team</div>
+    <div class="team-grid" id="team-grid">
+      <div style="color:#aaa; font-size:14px;">Loading teams...</div>
+    </div>
+  </div>
+
+  <div class="submit-banner">
+    <h2>Been to a game recently?</h2>
+    <p>Help document the rafters — submit a photo of any banner you spotted.</p>
+    <button class="btn-white">Submit a banner</button>
+  </div>
+
+  <div class="footer">
+    RafterDB © 2026 · Built by fans, for fans
+  </div>
+
+  <script>
+    const SUPABASE_URL = https://dzvjqmjjqlkiatxxoxma.supabase.co
+    const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6dmpxbWpqcWxraWF0eHhveG1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjUzNzUsImV4cCI6MjA5NDMwMTM3NX0.3U1UMG2utk_h-neHH2Tt7rO0HdeoxgfixHWKu_liXGM
+
+    async function loadData() {
+      try {
+        const teamsRes = await fetch(`${SUPABASE_URL}/rest/v1/teams?select=*`, {
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        const teams = await teamsRes.json();
+
+        const bannersRes = await fetch(`${SUPABASE_URL}/rest/v1/banners?select=team_id`, {
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        const banners = await bannersRes.json();
+
+        const arenaRes = await fetch(`${SUPABASE_URL}/rest/v1/arenas?select=*`, {
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        const arenas = await arenaRes.json();
+
+        document.getElementById('stat-teams').textContent = teams.length;
+        document.getElementById('stat-arenas').textContent = arenas.length;
+        document.getElementById('stat-banners').textContent = banners.length;
+
+        const bannerCounts = {};
+        banners.forEach(b => { bannerCounts[b.team_id] = (bannerCounts[b.team_id] || 0) + 1; });
+
+        const arenaMap = {};
+        arenas.forEach(a => { arenaMap[a.team_id] = a.name; });
+
+        const grid = document.getElementById('team-grid');
+        grid.innerHTML = teams.map(t => `
+          <a class="team-card" href="team.html?id=${t.id}">
+            <div class="team-league league-${t.league.toLowerCase()}">${t.league}</div>
+            <div class="team-name">${t.name}</div>
+            <div class="team-arena">${arenaMap[t.id] || ''}</div>
+            <div class="team-count"><strong>${bannerCounts[t.id] || 0}</strong> banners documented</div>
+          </a>
+        `).join('');
+      } catch(e) {
+        document.getElementById('team-grid').innerHTML = '<div style="color:#aaa;font-size:14px;">Could not load teams.</div>';
+      }
+    }
+
+    loadData();
+  </script>
+
+</body>
+</html>
