@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RafterDB — Mod Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; background: #f8f8f6; color: #1a1a1a; min-height: 100vh; }
+    .header { background: #1a3a6b; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; color: #fff; text-decoration: none; }
+    .logo span { opacity: 0.6; }
+    .mod-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; background: #faeeda; color: #633806; padding: 3px 10px; border-radius: 20px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    .page-title { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 1.5rem; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .stat { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 12px 14px; }
+    .stat-label { font-size: 12px; color: #aaa; margin-bottom: 4px; }
+    .stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; }
+    .stat-val.pending { color: #854f0b; }
+    .stat-val.approved { color: #0f6e56; }
+    .toolbar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+    .filter-tabs { display: flex; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; }
+    .filter-tab { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; padding: 7px 14px; border: none; background: transparent; color: #888; cursor: pointer; border-right: 1px solid #e5e5e5; }
+    .filter-tab:last-child { border-right: none; }
+    .filter-tab.active { background: #1a3a6b; color: #fff; }
+    .filter-tab:hover:not(.active) { background: #f8f8f6; }
+    .count-badge { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; font-weight: 700; background: #BF2B37; color: #fff; margin-left: 4px; }
+    .queue { display: flex; flex-direction: column; gap: 8px; }
+    .item { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden; }
+    .item.new-team { border-left: 3px solid #1a3a6b; }
+    .item.approved { opacity: 0.6; border-left: 3px solid #0f6e56; }
+    .item.rejected { opacity: 0.5; border-left: 3px solid #BF2B37; }
+    .item-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; }
+    .item-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .icon-banner { background: #e1f5ee; }
+    .icon-new { background: #e3f0fb; }
+    .item-main { flex: 1; min-width: 0; }
+    .item-title { font-size: 14px; font-weight: 500; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-meta { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .item-badges { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    .badge { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; }
+    .badge-pending { background: #faeeda; color: #633806; }
+    .badge-approved { background: #e1f5ee; color: #085041; }
+    .badge-rejected { background: #fcebeb; color: #791f1f; }
+    .badge-new { background: #e3f0fb; color: #185fa5; }
+    .item-time { font-size: 11px; color: #bbb; flex-shrink: 0; }
+    .item-body { border-top: 1px solid #f0f0f0; padding: 14px; display: none; }
+    .item.open .item-body { display: block; }
+    .chevron { font-size: 14px; color: #bbb; transition: transform 0.15s; flex-shrink: 0; }
+    .item.open .chevron { transform: rotate(180deg); }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .detail-box { background: #f8f8f6; border-radius: 8px; padding: 10px 12px; }
+    .detail-box-title { font-size: 11px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.6px; text-transform: uppercase; color: #aaa; margin-bottom: 6px; }
+    .detail-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+    .detail-key { color: #888; }
+    .detail-val { color: #1a1a1a; font-weight: 500; text-align: right; }
+    .notes-box { background: #f8f8f6; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 12px; }
+    .notes-title { font-size: 11px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.6px; text-transform: uppercase; color: #aaa; margin-bottom: 4px; }
+    .action-row { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+    .btn-approve { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; padding: 8px 20px; background: #0f6e56; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-approve:hover { background: #085041; }
+    .btn-reject { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; padding: 8px 16px; background: transparent; color: #BF2B37; border: 1px solid #BF2B37; border-radius: 8px; cursor: pointer; }
+    .btn-reject:hover { background: #fcebeb; }
+    .btn-publish { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; padding: 8px 20px; background: #1a3a6b; color: #fff; border: none; border-radius: 8px; cursor: pointer; margin-right: auto; }
+    .btn-publish:hover { background: #122d56; }
+    .empty { text-align: center; padding: 3rem; color: #aaa; font-size: 14px; }
+    .loading { text-align: center; padding: 2rem; color: #aaa; font-size: 14px; }
+    .status-note { font-size: 13px; color: #aaa; margin-right: auto; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="index.html" class="logo">Rafter<span>DB</span></a>
+    <div class="mod-badge">Mod dashboard</div>
+  </div>
+
+  <div class="container">
+    <div class="page-title">Submission queue</div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Pending review</div><div class="stat-val pending" id="stat-pending">—</div></div>
+      <div class="stat"><div class="stat-label">Approved total</div><div class="stat-val approved" id="stat-approved">—</div></div>
+      <div class="stat"><div class="stat-label">New teams</div><div class="stat-val" id="stat-newteams">—</div></div>
+      <div class="stat"><div class="stat-label">Total submissions</div><div class="stat-val" id="stat-total">—</div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setFilter('pending', this)">Pending <span class="count-badge" id="pending-count">0</span></button>
+        <button class="filter-tab" onclick="setFilter('new', this)">New teams</button>
+        <button class="filter-tab" onclick="setFilter('approved', this)">Approved</button>
+        <button class="filter-tab" onclick="setFilter('rejected', this)">Rejected</button>
+        <button class="filter-tab" onclick="setFilter('all', this)">All</button>
+      </div>
+    </div>
+
+    <div class="queue" id="queue"><div class="loading">Loading submissions...</div></div>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://dzvjqmjjqlkiatxxoxma.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6dmpxbWpqcWxraWF0eHhveG1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjUzNzUsImV4cCI6MjA5NDMwMTM3NX0.3U1UMG2utk_h-neHH2Tt7rO0HdeoxgfixHWKu_liXGM';
+    var client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    var allSubmissions = [];
+    var currentFilter = 'pending';
+
+    async function loadSubmissions() {
+      var { data, error } = await client.from('submissions').select('*, teams(name, league)').order('created_at', { ascending: false });
+      if (error) { document.getElementById('queue').innerHTML = '<div class="empty">Error loading submissions: ' + error.message + '</div>'; return; }
+      allSubmissions = data || [];
+      updateStats();
+      renderQueue();
+    }
+
+    function updateStats() {
+      var pending = allSubmissions.filter(function(s) { return s.status === 'pending'; }).length;
+      var approved = allSubmissions.filter(function(s) { return s.status === 'approved'; }).length;
+      var newTeams = allSubmissions.filter(function(s) { return s.type === 'new'; }).length;
+      document.getElementById('stat-pending').textContent = pending;
+      document.getElementById('stat-approved').textContent = approved;
+      document.getElementById('stat-newteams').textContent = newTeams;
+      document.getElementById('stat-total').textContent = allSubmissions.length;
+      document.getElementById('pending-count').textContent = pending;
+    }
+
+    function setFilter(f, btn) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+      btn.classList.add('active');
+      renderQueue();
+    }
+
+    function renderQueue() {
+      var filtered = allSubmissions.filter(function(s) {
+        if (currentFilter === 'pending') return s.status === 'pending';
+        if (currentFilter === 'new') return s.type === 'new';
+        if (currentFilter === 'approved') return s.status === 'approved';
+        if (currentFilter === 'rejected') return s.status === 'rejected';
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('queue').innerHTML = '<div class="empty">Nothing here — you\'re all caught up. 🎉</div>';
+        return;
+      }
+
+      document.getElementById('queue').innerHTML = filtered.map(function(s) {
+        var isNew = s.type === 'new';
+        var statusClass = s.status === 'approved' ? 'approved' : s.status === 'rejected' ? 'rejected' : isNew ? 'new-team' : '';
+        var statusBadge = s.status === 'approved' ? 'badge-approved' : s.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+        var statusLabel = s.status === 'approved' ? 'Approved' : s.status === 'rejected' ? 'Rejected' : 'Pending';
+        var teamName = s.teams ? s.teams.name : (s.new_team_name || 'Unknown team');
+        var title = s.banner_name || s.new_team_name || 'Unnamed submission';
+        var time = new Date(s.created_at).toLocaleDateString();
+
+        var bodyHTML = '';
+
+        if (isNew) {
+          bodyHTML +=
+            '<div class="detail-grid">' +
+            '<div class="detail-box"><div class="detail-box-title">New team</div>' +
+            (s.new_team_name ? '<div class="detail-row"><span class="detail-key">Name</span><span class="detail-val">' + s.new_team_name + '</span></div>' : '') +
+            (s.new_team_league ? '<div class="detail-row"><span class="detail-key">League</span><span class="detail-val">' + s.new_team_league + '</span></div>' : '') +
+            '</div>' +
+            '<div class="detail-box"><div class="detail-box-title">Arena</div>' +
+            (s.new_arena_name ? '<div class="detail-row"><span class="detail-key">Name</span><span class="detail-val">' + s.new_arena_name + '</span></div>' : '') +
+            '</div></div>' +
+            (s.new_arena_bio ? '<div class="notes-box"><div class="notes-title">Arena bio</div>' + s.new_arena_bio + '</div>' : '');
+        }
+
+        bodyHTML +=
+          '<div class="detail-box" style="margin-bottom:12px;"><div class="detail-box-title">Banner details</div>' +
+          '<div class="detail-row"><span class="detail-key">Type</span><span class="detail-val">' + (s.banner_type || '—') + '</span></div>' +
+          '<div class="detail-row"><span class="detail-key">Name</span><span class="detail-val">' + (s.banner_name || '—') + '</span></div>' +
+          (s.player_name ? '<div class="detail-row"><span class="detail-key">Player</span><span class="detail-val">' + s.player_name + '</span></div>' : '') +
+          (s.number ? '<div class="detail-row"><span class="detail-key">Number</span><span class="detail-val">#' + s.number + '</span></div>' : '') +
+          (s.year ? '<div class="detail-row"><span class="detail-key">Year</span><span class="detail-val">' + s.year + '</span></div>' : '') +
+          (s.wikipedia_url ? '<div class="detail-row"><span class="detail-key">Wikipedia</span><span class="detail-val"><a href="' + s.wikipedia_url + '" target="_blank" style="color:#1a3a6b;">View ↗</a></span></div>' : '') +
+          '<div class="detail-row"><span class="detail-key">Photo</span><span class="detail-val">' + (s.photo_url ? 'Attached' : 'Not included') + '</span></div>' +
+          '</div>';
+
+        if (s.notes) bodyHTML += '<div class="notes-box"><div class="notes-title">Submitter notes</div>' + s.notes + '</div>';
+
+        bodyHTML +=
+          '<div class="detail-row" style="margin-bottom:12px;"><span class="detail-key">Submitted by</span><span class="detail-val">' + (s.submitter_name || 'Anonymous') + (s.submitter_email ? ' · ' + s.submitter_email : '') + '</span></div>';
+
+        if (s.status === 'pending') {
+          bodyHTML +=
+            '<div class="action-row">' +
+            (isNew ? '<button class="btn-publish" onclick="publishNewTeam(\'' + s.id + '\')">Approve + publish team</button>' :
+              '<button class="btn-publish" onclick="approveBanner(\'' + s.id + '\')">Approve + publish banner</button>') +
+            '<button class="btn-reject" onclick="rejectItem(\'' + s.id + '\')">Reject</button>' +
+            '</div>';
+        } else {
+          bodyHTML += '<div class="action-row"><span class="status-note">' + (s.status === 'approved' ? '✅ Approved and live.' : '❌ Rejected.') + '</span></div>';
+        }
+
+        return '<div class="item ' + statusClass + '" id="item-' + s.id + '">' +
+          '<div class="item-header" onclick="toggleItem(\'' + s.id + '\')">' +
+          '<div class="chevron">▼</div>' +
+          '<div class="item-icon ' + (isNew ? 'icon-new' : 'icon-banner') + '">' + (isNew ? '🏟️' : '🏅') + '</div>' +
+          '<div class="item-main">' +
+          '<div class="item-title">' + title + '</div>' +
+          '<div class="item-meta">' + teamName + ' · from ' + (s.submitter_name || 'anonymous') + '</div>' +
+          '</div>' +
+          '<div class="item-badges">' +
+          (isNew ? '<span class="badge badge-new">New team</span>' : '') +
+          '<span class="badge ' + statusBadge + '">' + statusLabel + '</span>' +
+          '</div>' +
+          '<div class="item-time">' + time + '</div>' +
+          '</div>' +
+          '<div class="item-body">' + bodyHTML + '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function toggleItem(id) {
+      document.getElementById('item-' + id).classList.toggle('open');
+    }
+
+    async function approveBanner(id) {
+      var s = allSubmissions.find(function(x) { return x.id === id; });
+      if (!s) return;
+
+      await client.from('banners').insert([{
+        team_id: s.team_id,
+        type: s.banner_type,
+        name: s.banner_name,
+        description: s.banner_description,
+        player_name: s.player_name,
+        number: s.number,
+        year: s.year,
+        wikipedia_url: s.wikipedia_url,
+        submitted_by: s.submitter_name,
+        verified: true
+      }]);
+
+      await client.from('submissions').update({ status: 'approved' }).eq('id', id);
+      s.status = 'approved';
+      updateStats();
+      renderQueue();
+    }
+
+    async function publishNewTeam(id) {
+      var s = allSubmissions.find(function(x) { return x.id === id; });
+      if (!s) return;
+
+      var teamRes = await client.from('teams').insert([{
+        name: s.new_team_name,
+        league: s.new_team_league,
+        city: '',
+        state: ''
+      }]).select();
+
+      if (teamRes.data && teamRes.data[0]) {
+        var newTeamId = teamRes.data[0].id;
+        await client.from('arenas').insert([{
+          team_id: newTeamId,
+          name: s.new_arena_name,
+          bio: s.new_arena_bio
+        }]);
+        await client.from('banners').insert([{
+          team_id: newTeamId,
+          type: s.banner_type,
+          name: s.banner_name,
+          description: s.banner_description,
+          submitted_by: s.submitter_name,
+          verified: true
+        }]);
+      }
+
+      await client.from('submissions').update({ status: 'approved' }).eq('id', id);
+      s.status = 'approved';
+      updateStats();
+      renderQueue();
+    }
+
+    async function rejectItem(id) {
+      await client.from('submissions').update({ status: 'rejected' }).eq('id', id);
+      var s = allSubmissions.find(function(x) { return x.id === id; });
+      if (s) s.status = 'rejected';
+      updateStats();
+      renderQueue();
+    }
+
+    loadSubmissions();
+  </script>
+
+</body>
+</html>
