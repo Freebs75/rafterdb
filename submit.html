@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit a Banner — RafterDB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; background: #f8f8f6; color: #1a1a1a; min-height: 100vh; }
+    .header { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; text-decoration: none; color: #1a1a1a; }
+    .logo span { color: #1a3a6b; }
+    .back-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 18px; background: transparent; color: #1a3a6b; border: 1.5px solid #1a3a6b; border-radius: 6px; text-decoration: none; }
+    .container { max-width: 640px; margin: 0 auto; padding: 2rem; }
+    .page-title { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 700; margin-bottom: 6px; }
+    .page-sub { font-size: 14px; color: #888; margin-bottom: 2rem; }
+    .steps { display: flex; align-items: center; margin-bottom: 2rem; }
+    .step { display: flex; align-items: center; gap: 8px; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; border: 1px solid #ddd; color: #aaa; background: #fff; flex-shrink: 0; }
+    .step-num.active { background: #1a3a6b; color: #fff; border-color: #1a3a6b; }
+    .step-num.done { background: #e1f5ee; color: #085041; border-color: #085041; }
+    .step-label { font-size: 13px; color: #aaa; white-space: nowrap; }
+    .step-label.active { color: #1a1a1a; font-weight: 500; }
+    .step-divider { flex: 1; height: 1px; background: #e5e5e5; margin: 0 8px; min-width: 12px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .field { margin-bottom: 1.25rem; }
+    label { font-size: 13px; font-weight: 500; color: #1a1a1a; margin-bottom: 6px; display: block; }
+    .hint { font-weight: 400; color: #aaa; margin-left: 6px; }
+    input[type=text], input[type=email], select, textarea { width: 100%; font-family: 'Barlow', sans-serif; font-size: 14px; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #1a1a1a; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: #1a3a6b; }
+    textarea { resize: vertical; min-height: 80px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+    .type-opt { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-size: 13px; color: #888; background: #fff; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
+    .type-opt:hover { border-color: #1a3a6b; color: #1a1a1a; }
+    .type-opt.selected { border-color: #1a3a6b; background: #eef4ff; color: #1a3a6b; font-weight: 500; }
+    .fork { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 2rem; }
+    .fork-opt { border: 1px solid #ddd; border-radius: 10px; padding: 1.25rem; cursor: pointer; background: #fff; transition: all 0.15s; }
+    .fork-opt:hover { border-color: #1a3a6b; }
+    .fork-opt.selected { border: 2px solid #1a3a6b; background: #eef4ff; }
+    .fork-title { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .fork-desc { font-size: 13px; color: #888; line-height: 1.5; }
+    .upload-zone { border: 1.5px dashed #ddd; border-radius: 10px; padding: 2rem 1rem; text-align: center; cursor: pointer; background: #fafafa; transition: all 0.15s; }
+    .upload-zone:hover { border-color: #1a3a6b; background: #eef4ff; }
+    .upload-zone.has-file { border-style: solid; border-color: #1a3a6b; background: #eef4ff; }
+    .upload-label { font-size: 14px; color: #888; margin-bottom: 4px; }
+    .upload-hint { font-size: 12px; color: #bbb; }
+    .preview img { max-height: 140px; border-radius: 8px; margin-top: 10px; border: 1px solid #ddd; }
+    .note { font-size: 12px; color: #aaa; background: #f8f8f6; border-radius: 6px; padding: 8px 12px; margin-top: 8px; line-height: 1.5; }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.5rem; }
+    .btn-primary { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 10px 24px; background: #1a3a6b; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-primary:hover { background: #122d56; }
+    .btn-secondary { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 10px 20px; background: transparent; color: #888; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; }
+    .review-card { background: #f8f8f6; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+    .review-row { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; border-bottom: 1px solid #eee; gap: 1rem; }
+    .review-row:last-child { border-bottom: none; }
+    .review-key { color: #888; flex-shrink: 0; }
+    .review-val { color: #1a1a1a; text-align: right; }
+    .review-section { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #aaa; margin: 12px 0 6px; }
+    .review-section:first-child { margin-top: 0; }
+    .success { text-align: center; padding: 3rem 1rem; }
+    .success-icon { font-size: 48px; margin-bottom: 1rem; }
+    .success h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .success p { font-size: 14px; color: #888; margin-bottom: 1.5rem; line-height: 1.7; max-width: 400px; margin-left: auto; margin-right: auto; }
+    .success-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .search-wrap { position: relative; }
+    .search-results { border: 1px solid #ddd; border-radius: 8px; background: #fff; margin-top: 4px; display: none; overflow: hidden; }
+    .search-results.open { display: block; }
+    .search-item { padding: 10px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: #f8f8f6; }
+    .search-item-name { font-weight: 500; }
+    .search-item-meta { font-size: 12px; color: #aaa; }
+    .search-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: #e3f0fb; color: #0c447c; }
+    .selected-team { background: #eef4ff; border: 1px solid #1a3a6b; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+    .selected-team-name { font-size: 14px; font-weight: 500; color: #1a3a6b; }
+    .selected-team-meta { font-size: 12px; color: #4a6fa5; }
+    .clear-btn { font-size: 12px; color: #aaa; background: none; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="index.html" class="logo">Rafter<span>DB</span></a>
+    <a href="index.html" class="back-btn">← Back</a>
+  </div>
+
+  <div class="container">
+    <div class="page-title">Submit a banner</div>
+    <div class="page-sub">Add a banner to an existing team, or put a brand new team on the map.</div>
+
+    <div id="screen-fork">
+      <div class="fork">
+        <div class="fork-opt" id="fork-existing" onclick="selectFork('existing')">
+          <div class="fork-title">Add to existing team</div>
+          <div class="fork-desc">The team is already on RafterDB — add a banner or photo.</div>
+        </div>
+        <div class="fork-opt" id="fork-new" onclick="selectFork('new')">
+          <div class="fork-title">Add a new team</div>
+          <div class="fork-desc">This team isn't on RafterDB yet — create their page.</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" id="fork-next" onclick="startFlow()" style="opacity:0.4;cursor:not-allowed;">Get started</button>
+      </div>
+    </div>
+
+    <div id="screen-flow" style="display:none;">
+      <div class="steps" id="step-indicators"></div>
+      <div id="flow-content"></div>
+    </div>
+
+    <div id="screen-success" style="display:none;">
+      <div class="success">
+        <div class="success-icon">✅</div>
+        <h2>Submission received!</h2>
+        <p id="success-msg">Thanks for helping document the rafters. Your submission will be reviewed and published shortly.</p>
+        <div class="success-btns">
+          <a href="index.html" class="btn-primary">Back to homepage</a>
+          <button class="btn-secondary" onclick="resetForm()">Submit another</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://dzvjqmjjqlkiatxxoxma.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6dmpxbWpqcWxraWF0eHhveG1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjUzNzUsImV4cCI6MjA5NDMwMTM3NX0.3U1UMG2utk_h-neHH2Tt7rO0HdeoxgfixHWKu_liXGM';
+    var client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    var mode = '';
+    var currentStep = 1;
+    var selectedType = '';
+    var selectedTeam = null;
+    var allTeams = [];
+
+    client.from('teams').select('*').then(function(res) { allTeams = res.data || []; });
+
+    function selectFork(val) {
+      mode = val;
+      document.getElementById('fork-existing').classList.toggle('selected', val === 'existing');
+      document.getElementById('fork-new').classList.toggle('selected', val === 'new');
+      var btn = document.getElementById('fork-next');
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+    }
+
+    function startFlow() {
+      if (!mode) return;
+      document.getElementById('screen-fork').style.display = 'none';
+      document.getElementById('screen-flow').style.display = 'block';
+      currentStep = 1;
+      renderStep();
+    }
+
+    var stepsExisting = ['Find team', 'Banner details', 'Photo', 'Review'];
+    var stepsNew = ['Team info', 'Arena info', 'Banner details', 'Photo', 'Review'];
+
+    function renderSteps() {
+      var steps = mode === 'existing' ? stepsExisting : stepsNew;
+      document.getElementById('step-indicators').innerHTML = steps.map(function(s, i) {
+        var n = i + 1;
+        var numClass = n < currentStep ? 'done' : n === currentStep ? 'active' : '';
+        var lblClass = n === currentStep ? 'active' : '';
+        var numContent = n < currentStep ? '✓' : n;
+        return (i > 0 ? '<div class="step-divider"></div>' : '') +
+          '<div class="step"><div class="step-num ' + numClass + '">' + numContent + '</div><div class="step-label ' + lblClass + '">' + s + '</div></div>';
+      }).join('');
+    }
+
+    function renderStep() {
+      renderSteps();
+      var c = document.getElementById('flow-content');
+      if (mode === 'existing') renderExisting(c);
+      else renderNew(c);
+    }
+
+    function renderExisting(c) {
+      if (currentStep === 1) {
+        c.innerHTML =
+          '<div class="field"><label>Search for a team</label>' +
+          '<div class="search-wrap"><input type="text" id="team-search" placeholder="e.g. Minnesota Wild..." oninput="searchTeams(this.value)" autocomplete="off">' +
+          '<div class="search-results" id="search-results"></div></div>' +
+          '<div id="selected-team-wrap"></div>' +
+          '<div class="note">Can\'t find your team? Go back and choose "Add a new team."</div></div>' +
+          '<div class="actions"><button class="btn-secondary" onclick="goBack()">Back</button>' +
+          '<button class="btn-primary" id="step-next" onclick="nextStep()" style="opacity:0.4;cursor:not-allowed;">Next</button></div>';
+      } else if (currentStep === 2) {
+        c.innerHTML = (selectedTeam ? '<div class="selected-team" style="margin-bottom:1.25rem;"><div><div class="selected-team-name">' + selectedTeam.name + '</div><div class="selected-team-meta">' + selectedTeam.league + '</div></div></div>' : '') +
+          bannerDetailsHTML() +
+          '<div class="actions"><button class="btn-secondary" onclick="prevStep()">Back</button><button class="btn-primary" onclick="nextStep()">Next</button></div>';
+        bindTypes();
+      } else if (currentStep === 3) {
+        c.innerHTML = photoHTML() +
+          '<div class="actions"><button class="btn-secondary" onclick="prevStep()">Back</button><button class="btn-primary" onclick="nextStep()">Next</button></div>';
+        bindUpload();
+      } else if (currentStep === 4) {
+        c.innerHTML = reviewHTML() +
+          '<div class="actions"><button class="btn-secondary" onclick="prevStep()">Back</button><button class="btn-primary" onclick="submitForm()">Submit</button></div>';
+      }
+    }
+
+    function renderNew(c) {
+      if (currentStep === 1) {
+        c.innerHTML =
+          '<div class="row"><div class="field"><label>Team name</label><input type="text" id="f-teamname" placeholder="e.g. University of Minnesota"></div>' +
+          '<div class="field"><label>Nickname <span class="hint">optional</span></label><input type="text" id="f-nickname" placeholder="e.g. Golden Gophers"></div></div>' +
+          '<div class="row"><div class="field"><label>League</label><select id="f-league"><option value="">Select...</option><option>NHL</option><option>NBA</option><option>NFL</option><option>MLB</option><option>NCAA Hockey</option><option>NCAA Basketball</option><option>NCAA Football</option><option>AHL</option><option>ECHL</option><option>Other</option></select></div>' +
+          '<div class="field"><label>Sport</label><select id="f-sport"><option value="">Select...</option><option>Hockey</option><option>Basketball</option><option>Football</option><option>Baseball</option><option>Other</option></select></div></div>' +
+          '<div class="row"><div class="field"><label>City</label><input type="text" id="f-city" placeholder="e.g. Minneapolis"></div>' +
+          '<div class="field"><label>State</label><input type="text" id="f-state" placeholder="e.g. MN"></div></div>' +
+          '<div class="field"><label>Year founded <span class="hint">optional</span></label><input type="text" id="f-founded" placeholder="e.g. 1972" style="width:160px;"></div>' +
+          '<div class="actions"><button class="btn-secondary" onclick="goBack()">Back</button><button class="btn-primary" onclick="nextStep()">Next</button></div>';
+      } else if (currentStep === 2) {
+        c.innerHTML =
+          '<div class="field"><label>Arena / stadium name</label><input type="text" id="f-arena" placeholder="e.g. Mariucci Arena"></div>' +
+          '<div class="row"><div class="field"><label>Year opened <span class="hint">optional</span></label><input type="text" id="f-opened" placeholder="e.g. 1993"></div>' +
+          '<div class="field"><label>Capacity <span class="hint">optional</span></label><input type="text" id="f-capacity" placeholder="e.g. 10,000"></div></div>' +
+          '<div class="field"><label>Arena history <span class="hint">optional but encouraged</span></label><textarea id="f-arenabio" placeholder="Tell us a bit about this arena..."></textarea></div>' +
+          '<div class="note">This becomes the intro paragraph on the team\'s RafterDB page.</div>' +
+          '<div class="actions"><button class="btn-secondary" onclick="prevStep()">Back</button><button class="btn-primary" onclick="nextStep()">Next</button></div>';
+      } else if (currentStep === 3) {
+        c.innerHTML = bannerDetailsHTML() +
+          '<div class="actions"><button class="btn-secondary" onclick="prevStep()">Back</button><button class="btn-primary" onclick="nextStep()">Next</button></div>';
+        bindTypes();
+      } else if (currentStep === 4) {
+        c.innerHTML = photoHTML() +
+          '<div class="actions"><button class="btn-secondary" onclick="prevStep()">Back</button><button class="btn-primary" onclick="nextStep()">Next</button></div>';
+        bindUpload();
+      } else if (currentStep === 5) {
+        c.innerHTML = reviewHTML() +
+          '<div class="actions"><button class="btn-secondary" onclick="prevStep()">Back</button><button class="btn-primary" onclick="submitForm()">Submit</button></div>';
+      }
+    }
+
+    function bannerDetailsHTML() {
+      return '<div class="field"><label>Banner type</label>' +
+        '<div class="type-grid">' +
+        '<div class="type-opt" data-val="retired" onclick="selectType(this)">🏅 Retired number</div>' +
+        '<div class="type-opt" data-val="championship" onclick="selectType(this)">🏆 Championship</div>' +
+        '<div class="type-opt" data-val="division" onclick="selectType(this)">🥇 Division title</div>' +
+        '<div class="type-opt" data-val="conference" onclick="selectType(this)">⭐ Conference title</div>' +
+        '<div class="type-opt" data-val="honor" onclick="selectType(this)">❤️ Honor roll</div>' +
+        '<div class="type-opt" data-val="special" onclick="selectType(this)">🚩 Special / other</div>' +
+        '</div></div>' +
+        '<div id="retired-fields" style="display:none;">' +
+        '<div class="row"><div class="field"><label>Jersey number</label><input type="text" id="f-number" placeholder="e.g. 9"></div>' +
+        '<div class="field"><label>Player name</label><input type="text" id="f-player" placeholder="e.g. Mikko Koivu"></div></div>' +
+        '<div class="row"><div class="field"><label>Position <span class="hint">optional</span></label><input type="text" id="f-position" placeholder="e.g. C"></div>' +
+        '<div class="field"><label>Year retired <span class="hint">optional</span></label><input type="text" id="f-yearretired" placeholder="e.g. 2022"></div></div>' +
+        '<div class="field"><label>Years with team <span class="hint">optional</span></label><input type="text" id="f-tenure" placeholder="e.g. 2005–2021" style="width:200px;"></div>' +
+        '<div class="field"><label>Wikipedia URL <span class="hint">optional</span></label><input type="text" id="f-wiki" placeholder="https://en.wikipedia.org/wiki/..."></div>' +
+        '</div>' +
+        '<div id="other-fields" style="display:none;">' +
+        '<div class="field"><label>Banner description</label><input type="text" id="f-desc" placeholder="e.g. 2003 NCAA Championship"></div>' +
+        '<div class="field"><label>Year <span class="hint">optional</span></label><input type="text" id="f-year" placeholder="e.g. 2003" style="width:160px;"></div>' +
+        '</div>' +
+        '<div class="field"><label>Notes <span class="hint">optional</span></label><textarea id="f-notes" placeholder="Anything that would help verify this banner..."></textarea></div>';
+    }
+
+    function photoHTML() {
+      return '<div class="field"><label>Photo <span class="hint">optional — skip if you don\'t have one</span></label>' +
+        '<div class="upload-zone" id="upload-zone" onclick="document.getElementById(\'file-input\').click()">' +
+        '<div class="upload-label">📷 Click to upload or drag a photo here</div>' +
+        '<div class="upload-hint">JPG, PNG or HEIC · Max 20MB</div>' +
+        '<div class="preview" id="preview-wrap"></div>' +
+        '</div>' +
+        '<input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFile(this)">' +
+        '<div class="note">No photo? Submit without one — the banner will show as "photo needed" so other fans know to grab a shot.</div></div>';
+    }
+
+    function reviewHTML() {
+      var typeEl = document.querySelector('.type-opt.selected');
+      var typeLabel = typeEl ? typeEl.textContent.trim() : '—';
+      var details = '—';
+      var numEl = document.getElementById('f-number');
+      var playerEl = document.getElementById('f-player');
+      var descEl = document.getElementById('f-desc');
+      if (selectedType === 'retired' && numEl && playerEl) details = [numEl.value ? '#' + numEl.value : '', playerEl.value].filter(Boolean).join(' — ') || '—';
+      else if (descEl) details = descEl.value || '—';
+
+      var html = '<div class="field"><label>Your name <span class="hint">optional — for credit</span></label><input type="text" id="f-submitter" placeholder="Username or name"></div>' +
+        '<div class="field"><label>Email <span class="hint">optional</span></label><input type="email" id="f-email" placeholder="you@example.com"></div>' +
+        '<div class="review-card">';
+
+      if (mode === 'new') {
+        var tn = document.getElementById('f-teamname');
+        var lg = document.getElementById('f-league');
+        var ar = document.getElementById('f-arena');
+        html += '<div class="review-section">New team</div>' +
+          '<div class="review-row"><span class="review-key">Team</span><span class="review-val">' + (tn ? tn.value : '—') + '</span></div>' +
+          '<div class="review-row"><span class="review-key">League</span><span class="review-val">' + (lg ? lg.value : '—') + '</span></div>' +
+          '<div class="review-row"><span class="review-key">Arena</span><span class="review-val">' + (ar ? ar.value : '—') + '</span></div>' +
+          '<div class="review-section">Banner</div>';
+      } else {
+        html += '<div class="review-section">Team</div>' +
+          '<div class="review-row"><span class="review-key">Team</span><span class="review-val">' + (selectedTeam ? selectedTeam.name : '—') + '</span></div>' +
+          '<div class="review-section">Banner</div>';
+      }
+
+      html += '<div class="review-row"><span class="review-key">Type</span><span class="review-val">' + typeLabel + '</span></div>' +
+        '<div class="review-row"><span class="review-key">Details</span><span class="review-val">' + details + '</span></div>' +
+        '<div class="review-row"><span class="review-key">Photo</span><span class="review-val">' + (window.uploadedFile ? 'Attached' : 'Not included') + '</span></div>' +
+        '</div>' +
+        '<div class="note">All submissions are reviewed before going live — usually within a day or two.</div>';
+      return html;
+    }
+
+    function bindTypes() {
+      document.querySelectorAll('.type-opt').forEach(function(el) {
+        if (el.dataset.val === selectedType) el.classList.add('selected');
+      });
+    }
+
+    function selectType(el) {
+      document.querySelectorAll('.type-opt').forEach(function(o) { o.classList.remove('selected'); });
+      el.classList.add('selected');
+      selectedType = el.dataset.val;
+      var rf = document.getElementById('retired-fields');
+      var of = document.getElementById('other-fields');
+      if (rf) rf.style.display = selectedType === 'retired' ? 'block' : 'none';
+      if (of) of.style.display = (selectedType && selectedType !== 'retired') ? 'block' : 'none';
+    }
+
+    function bindUpload() {
+      var zone = document.getElementById('upload-zone');
+      if (!zone) return;
+      zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.style.borderColor = '#1a3a6b'; });
+      zone.addEventListener('dragleave', function() { zone.style.borderColor = ''; });
+      zone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        if (e.dataTransfer.files[0]) { document.getElementById('file-input').files = e.dataTransfer.files; handleFile(document.getElementById('file-input')); }
+      });
+    }
+
+    window.uploadedFile = null;
+
+    function handleFile(input) {
+      if (!input.files || !input.files[0]) return;
+      window.uploadedFile = input.files[0];
+      var zone = document.getElementById('upload-zone');
+      zone.classList.add('has-file');
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('preview-wrap').innerHTML = '<img src="' + e.target.result + '">';
+        zone.querySelector('.upload-label').textContent = input.files[0].name;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+
+    function searchTeams(val) {
+      var res = document.getElementById('search-results');
+      if (val.length < 2) { res.classList.remove('open'); return; }
+      var matches = allTeams.filter(function(t) { return t.name.toLowerCase().includes(val.toLowerCase()); });
+      if (matches.length === 0) {
+        res.innerHTML = '<div class="search-item" style="color:#aaa;">No results — try adding a new team.</div>';
+      } else {
+        res.innerHTML = matches.map(function(t) {
+          return '<div class="search-item" onclick="pickTeam(' + JSON.stringify(t).replace(/"/g, '&quot;') + ')">' +
+            '<div><div class="search-item-name">' + t.name + '</div><div class="search-item-meta">' + t.city + ', ' + t.state + '</div></div>' +
+            '<span class="search-badge">' + t.league + '</span></div>';
+        }).join('');
+      }
+      res.classList.add('open');
+    }
+
+    function pickTeam(t) {
+      selectedTeam = t;
+      document.getElementById('team-search').value = t.name;
+      document.getElementById('search-results').classList.remove('open');
+      document.getElementById('selected-team-wrap').innerHTML =
+        '<div class="selected-team"><div><div class="selected-team-name">' + t.name + '</div><div class="selected-team-meta">' + t.league + ' · ' + t.city + ', ' + t.state + '</div></div>' +
+        '<button class="clear-btn" onclick="clearTeam()">✕ Change</button></div>';
+      var btn = document.getElementById('step-next');
+      if (btn) { btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+    }
+
+    function clearTeam() {
+      selectedTeam = null;
+      document.getElementById('team-search').value = '';
+      document.getElementById('selected-team-wrap').innerHTML = '';
+      var btn = document.getElementById('step-next');
+      if (btn) { btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; }
+    }
+
+    function nextStep() { currentStep++; renderStep(); }
+    function prevStep() { currentStep--; renderStep(); }
+
+    function goBack() {
+      document.getElementById('screen-flow').style.display = 'none';
+      document.getElementById('screen-fork').style.display = 'block';
+      mode = ''; currentStep = 1;
+      document.getElementById('fork-existing').classList.remove('selected');
+      document.getElementById('fork-new').classList.remove('selected');
+      var btn = document.getElementById('fork-next');
+      btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed';
+    }
+
+    async function submitForm() {
+      var submitterEl = document.getElementById('f-submitter');
+      var emailEl = document.getElementById('f-email');
+      var notesEl = document.getElementById('f-notes');
+
+      var payload = {
+        type: mode,
+        status: 'pending',
+        banner_type: selectedType,
+        submitter_name: submitterEl ? submitterEl.value : '',
+        submitter_email: emailEl ? emailEl.value : '',
+        notes: notesEl ? notesEl.value : ''
+      };
+
+      if (mode === 'existing' && selectedTeam) payload.team_id = selectedTeam.id;
+
+      if (selectedType === 'retired') {
+        var numEl = document.getElementById('f-number');
+        var playerEl = document.getElementById('f-player');
+        var posEl = document.getElementById('f-position');
+        var yrEl = document.getElementById('f-yearretired');
+        var tenEl = document.getElementById('f-tenure');
+        var wikiEl = document.getElementById('f-wiki');
+        payload.banner_name = (numEl ? '#' + numEl.value : '') + (playerEl ? ' — ' + playerEl.value : '');
+        payload.player_name = playerEl ? playerEl.value : '';
+        payload.number = numEl ? numEl.value : '';
+        payload.year = yrEl ? yrEl.value : '';
+        payload.wikipedia_url = wikiEl ? wikiEl.value : '';
+      } else {
+        var descEl = document.getElementById('f-desc');
+        var yearEl = document.getElementById('f-year');
+        payload.banner_name = descEl ? descEl.value : '';
+        payload.banner_description = descEl ? descEl.value : '';
+        payload.year = yearEl ? yearEl.value : '';
+      }
+
+      if (mode === 'new') {
+        var tnEl = document.getElementById('f-teamname');
+        var lgEl = document.getElementById('f-league');
+        var arEl = document.getElementById('f-arena');
+        var bioEl = document.getElementById('f-arenabio');
+        payload.new_team_name = tnEl ? tnEl.value : '';
+        payload.new_team_league = lgEl ? lgEl.value : '';
+        payload.new_arena_name = arEl ? arEl.value : '';
+        payload.new_arena_bio = bioEl ? bioEl.value : '';
+      }
+
+      await client.from('submissions').insert([payload]);
+
+      document.getElementById('screen-flow').style.display = 'none';
+      document.getElementById('screen-success').style.display = 'block';
+      document.getElementById('success-msg').textContent = mode === 'new'
+        ? "Thanks for putting this team on the map! We'll review and publish shortly."
+        : "Thanks for helping document the rafters. Your submission will be reviewed and published shortly.";
+    }
+
+    function resetForm() {
+      mode = ''; currentStep = 1; selectedType = ''; selectedTeam = null; window.uploadedFile = null;
+      document.getElementById('screen-success').style.display = 'none';
+      document.getElementById('screen-fork').style.display = 'block';
+      document.getElementById('fork-existing').classList.remove('selected');
+      document.getElementById('fork-new').classList.remove('selected');
+      var btn = document.getElementById('fork-next');
+      btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed';
+    }
+  </script>
+
+</body>
+</html>
