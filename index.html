@@ -17,8 +17,8 @@
     .hero h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 700; line-height: 1; margin-bottom: 1rem; }
     .hero p { font-size: 18px; color: #666; margin-bottom: 2rem; }
     .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .btn-primary { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 12px 28px; background: #1a3a6b; color: #fff; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; }
-    .btn-secondary { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 12px 28px; background: transparent; color: #1a3a6b; border: 1.5px solid #1a3a6b; border-radius: 8px; cursor: pointer; text-decoration: none; }
+    .btn-primary { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 12px 28px; background: #1a3a6b; color: #fff; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-secondary { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 12px 28px; background: transparent; color: #1a3a6b; border: 1.5px solid #1a3a6b; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
     .stats-bar { background: #1a3a6b; color: #fff; padding: 1.5rem 2rem; display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap; }
     .stat { text-align: center; }
     .stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 700; }
@@ -40,6 +40,7 @@
     .submit-banner p { font-size: 14px; opacity: 0.8; margin-bottom: 1.25rem; }
     .btn-white { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 10px 24px; background: #fff; color: #1a3a6b; border: none; border-radius: 8px; cursor: pointer; }
     .footer { text-align: center; padding: 2rem; font-size: 13px; color: #aaa; border-top: 1px solid #e5e5e5; margin-top: 2rem; }
+    .error { color: #c0392b; font-size: 14px; padding: 1rem; background: #fdf0f0; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -85,51 +86,58 @@
   </div>
 
   <script>
-    const SUPABASE_URL = https://dzvjqmjjqlkiatxxoxma.supabase.co
-    const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6dmpxbWpqcWxraWF0eHhveG1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjUzNzUsImV4cCI6MjA5NDMwMTM3NX0.3U1UMG2utk_h-neHH2Tt7rO0HdeoxgfixHWKu_liXGM
+    var SUPABASE_URL = https://dzvjqmjjqlkiatxxoxma.supabase.co
+    var SUPABASE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6dmpxbWpqcWxraWF0eHhveG1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjUzNzUsImV4cCI6MjA5NDMwMTM3NX0.3U1UMG2utk_h-neHH2Tt7rO0HdeoxgfixHWKu_liXGM
 
-    async function loadData() {
-      try {
-        const teamsRes = await fetch(`${SUPABASE_URL}/rest/v1/teams?select=*`, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        const teams = await teamsRes.json();
-
-        const bannersRes = await fetch(`${SUPABASE_URL}/rest/v1/banners?select=team_id`, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        const banners = await bannersRes.json();
-
-        const arenaRes = await fetch(`${SUPABASE_URL}/rest/v1/arenas?select=*`, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        const arenas = await arenaRes.json();
-
-        document.getElementById('stat-teams').textContent = teams.length;
-        document.getElementById('stat-arenas').textContent = arenas.length;
-        document.getElementById('stat-banners').textContent = banners.length;
-
-        const bannerCounts = {};
-        banners.forEach(b => { bannerCounts[b.team_id] = (bannerCounts[b.team_id] || 0) + 1; });
-
-        const arenaMap = {};
-        arenas.forEach(a => { arenaMap[a.team_id] = a.name; });
-
-        const grid = document.getElementById('team-grid');
-        grid.innerHTML = teams.map(t => `
-          <a class="team-card" href="team.html?id=${t.id}">
-            <div class="team-league league-${t.league.toLowerCase()}">${t.league}</div>
-            <div class="team-name">${t.name}</div>
-            <div class="team-arena">${arenaMap[t.id] || ''}</div>
-            <div class="team-count"><strong>${bannerCounts[t.id] || 0}</strong> banners documented</div>
-          </a>
-        `).join('');
-      } catch(e) {
-        document.getElementById('team-grid').innerHTML = '<div style="color:#aaa;font-size:14px;">Could not load teams.</div>';
-      }
+    function fetchFromSupabase(table) {
+      return fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=*', {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        }
+      }).then(function(r) { return r.json(); });
     }
 
-    loadData();
+    fetchFromSupabase('teams').then(function(teams) {
+      document.getElementById('stat-teams').textContent = teams.length;
+
+      fetchFromSupabase('arenas').then(function(arenas) {
+        document.getElementById('stat-arenas').textContent = arenas.length;
+
+        fetchFromSupabase('banners').then(function(banners) {
+          document.getElementById('stat-banners').textContent = banners.length;
+
+          var bannerCounts = {};
+          banners.forEach(function(b) {
+            bannerCounts[b.team_id] = (bannerCounts[b.team_id] || 0) + 1;
+          });
+
+          var arenaMap = {};
+          arenas.forEach(function(a) {
+            arenaMap[a.team_id] = a.name;
+          });
+
+          var grid = document.getElementById('team-grid');
+          grid.innerHTML = teams.map(function(t) {
+            return '<a class="team-card" href="team.html?id=' + t.id + '">' +
+              '<div class="team-league league-' + t.league.toLowerCase() + '">' + t.league + '</div>' +
+              '<div class="team-name">' + t.name + '</div>' +
+              '<div class="team-arena">' + (arenaMap[t.id] || '') + '</div>' +
+              '<div class="team-count"><strong>' + (bannerCounts[t.id] || 0) + '</strong> banners documented</div>' +
+              '</a>';
+          }).join('');
+
+        }).catch(function(e) {
+          document.getElementById('team-grid').innerHTML = '<div class="error">Error loading banners: ' + e.message + '</div>';
+        });
+      }).catch(function(e) {
+        document.getElementById('team-grid').innerHTML = '<div class="error">Error loading arenas: ' + e.message + '</div>';
+      });
+    }).catch(function(e) {
+      document.getElementById('team-grid').innerHTML = '<div class="error">Error loading teams: ' + e.message + '</div>';
+    });
   </script>
 
 </body>
