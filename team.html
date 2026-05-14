@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RafterDB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; background: #f8f8f6; color: #1a1a1a; min-height: 100vh; }
+    .header { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; text-decoration: none; color: #1a1a1a; }
+    .logo span { color: #1a3a6b; }
+    .back-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 18px; background: transparent; color: #1a3a6b; border: 1.5px solid #1a3a6b; border-radius: 6px; cursor: pointer; text-decoration: none; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+    .team-hero { background: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #e5e5e5; }
+    .team-league { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+    .league-nhl { color: #0c447c; }
+    .league-nba { color: #e65100; }
+    .league-nfl { color: #2e7d32; }
+    .league-mlb { color: #c62828; }
+    .league-ncaa { color: #3c3489; }
+    .team-name { font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+    .team-arena { font-size: 14px; color: #888; margin-bottom: 1rem; }
+    .team-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .meta-pill { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; background: #f0f0f0; color: #666; }
+    .arena-bio { font-size: 14px; line-height: 1.7; color: #666; background: #f8f8f6; border-radius: 8px; padding: 1rem; }
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .stat-box { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 12px 14px; }
+    .stat-label { font-size: 12px; color: #aaa; margin-bottom: 4px; }
+    .stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; color: #1a1a1a; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; padding: 4px 12px; border: 1px solid #e5e5e5; border-radius: 20px; background: transparent; color: #888; cursor: pointer; }
+    .filter-btn.active { background: #1a3a6b; color: #fff; border-color: #1a3a6b; }
+    .banner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 2rem; }
+    .banner-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden; }
+    .banner-img { height: 110px; display: flex; align-items: center; justify-content: center; background: #1a3a6b; padding: 12px; }
+    .banner-img.no-photo { background: #f0f0f0; }
+    .banner-img-text { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; color: #fff; text-align: center; line-height: 1.3; }
+    .banner-img-sub { font-size: 11px; color: rgba(255,255,255,0.65); text-align: center; margin-top: 4px; }
+    .no-photo-label { font-size: 12px; color: #bbb; text-align: center; }
+    .banner-body { padding: 10px 12px; }
+    .banner-type { font-size: 11px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: #aaa; margin-bottom: 3px; }
+    .banner-name { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; color: #1a1a1a; line-height: 1.2; margin-bottom: 2px; }
+    .banner-sub { font-size: 12px; color: #888; }
+    .banner-actions { display: flex; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
+    .banner-actions a { font-size: 12px; color: #888; text-decoration: none; }
+    .banner-actions a:hover { color: #1a3a6b; }
+    .photo-badge { font-size: 10px; font-weight: 600; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.4px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+    .photo-badge.has { background: #e1f5ee; color: #085041; }
+    .photo-badge.needs { background: #faeeda; color: #633806; }
+    .submit-bar { background: #1a3a6b; color: #fff; border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
+    .submit-bar p { font-size: 14px; opacity: 0.85; }
+    .submit-bar strong { opacity: 1; }
+    .submit-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 18px; background: #fff; color: #1a3a6b; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+    .loading { color: #aaa; font-size: 14px; padding: 2rem 0; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="index.html" class="logo">Rafter<span>DB</span></a>
+    <a href="index.html" class="back-btn">← All teams</a>
+  </div>
+
+  <div class="container">
+    <div id="page-content"><div class="loading">Loading...</div></div>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://dzvjqmjjqlkiatxxoxma.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6dmpxbWpqcWxraWF0eHhveG1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjUzNzUsImV4cCI6MjA5NDMwMTM3NX0.3U1UMG2utk_h-neHH2Tt7rO0HdeoxgfixHWKu_liXGM';
+
+    var client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    var params = new URLSearchParams(window.location.search);
+    var teamId = params.get('id');
+
+    var typeLabels = {
+      'retired': 'Retired number',
+      'championship': 'Championship',
+      'division': 'Division title',
+      'conference': 'Conference title',
+      'special': 'Special banner',
+      'honor': 'Honor roll'
+    };
+
+    var allBanners = [];
+
+    function renderBanners(filter) {
+      var filtered = filter === 'all' ? allBanners : allBanners.filter(function(b) { return b.type === filter; });
+      if (filtered.length === 0) return '<div class="loading">No banners in this category yet.</div>';
+      return filtered.map(function(b) {
+        var hasPhoto = !!b.photo_url;
+        return '<div class="banner-card">' +
+          '<div class="banner-img ' + (hasPhoto ? '' : 'no-photo') + '">' +
+            (hasPhoto
+              ? '<div><div class="banner-img-text">' + b.name + '</div><div class="banner-img-sub">' + (b.description || '') + '</div></div>'
+              : '<div class="no-photo-label">📷 Photo needed</div>') +
+          '</div>' +
+          '<div class="banner-body">' +
+            '<div class="banner-type">' + (typeLabels[b.type] || b.type) + '</div>' +
+            '<div class="banner-name">' + b.name + '</div>' +
+            '<div class="banner-sub">' + (b.description || (b.player_name ? (b.position || '') + ' · ' + (b.tenure || '') : '') || '') + '</div>' +
+            '<div class="banner-actions">' +
+              (b.wikipedia_url ? '<a href="' + b.wikipedia_url + '" target="_blank">Wikipedia ↗</a>' : '') +
+            '</div>' +
+            '<span class="photo-badge ' + (hasPhoto ? 'has' : 'needs') + '">' + (hasPhoto ? 'Photo' : 'Needs photo') + '</span>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function setFilter(type, btn) {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('banner-grid').innerHTML = renderBanners(type);
+    }
+
+    async function loadPage() {
+      if (!teamId) {
+        document.getElementById('page-content').innerHTML = '<div class="loading">No team specified.</div>';
+        return;
+      }
+
+      var { data: teams } = await client.from('teams').select('*').eq('id', teamId);
+      var { data: arenas } = await client.from('arenas').select('*').eq('team_id', teamId);
+      var { data: banners } = await client.from('banners').select('*').eq('team_id', teamId);
+
+      var team = teams && teams[0];
+      var arena = arenas && arenas[0];
+      allBanners = banners || [];
+
+      if (!team) {
+        document.getElementById('page-content').innerHTML = '<div class="loading">Team not found.</div>';
+        return;
+      }
+
+      document.title = team.name + ' — RafterDB';
+
+      var retiredCount = allBanners.filter(function(b) { return b.type === 'retired'; }).length;
+      var champCount = allBanners.filter(function(b) { return b.type === 'championship'; }).length;
+      var photoCount = allBanners.filter(function(b) { return !!b.photo_url; }).length;
+
+      document.getElementById('page-content').innerHTML =
+        '<div class="team-hero">' +
+          '<div class="team-league league-' + team.league.toLowerCase() + '">' + team.league + '</div>' +
+          '<div class="team-name">' + team.name + '</div>' +
+          '<div class="team-arena">' + (arena ? arena.name : '') + ' · ' + team.city + ', ' + team.state + '</div>' +
+          '<div class="team-meta">' +
+            '<span class="meta-pill">' + team.league + '</span>' +
+            '<span class="meta-pill">' + team.state + '</span>' +
+            (team.founded ? '<span class="meta-pill">Est. ' + team.founded + '</span>' : '') +
+          '</div>' +
+          (arena && arena.bio ? '<div class="arena-bio">' + arena.bio + '</div>' : '') +
+        '</div>' +
+
+        '<div class="stats-row">' +
+          '<div class="stat-box"><div class="stat-label">Banners documented</div><div class="stat-val">' + allBanners.length + '</div></div>' +
+          '<div class="stat-box"><div class="stat-label">Photos submitted</div><div class="stat-val">' + photoCount + '</div></div>' +
+          '<div class="stat-box"><div class="stat-label">Retired numbers</div><div class="stat-val">' + retiredCount + '</div></div>' +
+          '<div class="stat-box"><div class="stat-label">Championships</div><div class="stat-val">' + champCount + '</div></div>' +
+        '</div>' +
+
+        '<div class="section-head">' +
+          '<div class="section-title">Banners</div>' +
+          '<div class="filter-row">' +
+            '<button class="filter-btn active" onclick="setFilter(\'all\', this)">All</button>' +
+            '<button class="filter-btn" onclick="setFilter(\'championship\', this)">Championships</button>' +
+            '<button class="filter-btn" onclick="setFilter(\'retired\', this)">Retired numbers</button>' +
+            '<button class="filter-btn" onclick="setFilter(\'division\', this)">Division titles</button>' +
+            '<button class="filter-btn" onclick="setFilter(\'special\', this)">Special</button>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="banner-grid" id="banner-grid">' + renderBanners('all') + '</div>' +
+
+        '<div class="submit-bar">' +
+          '<p><strong>Been to ' + (arena ? arena.name : 'this arena') + '?</strong> Help us document the rafters.</p>' +
+          '<button class="submit-btn">Submit a photo ↗</button>' +
+        '</div>';
+    }
+
+    loadPage();
+  </script>
+
+</body>
+</html>
